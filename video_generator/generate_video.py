@@ -13,12 +13,10 @@ import requests
 from pathlib import Path
 
 import anthropic
-from moviepy.editor import (
+from moviepy import (
     AudioFileClip, ColorClip, CompositeVideoClip,
-    TextClip, concatenate_videoclips
+    TextClip, concatenate_videoclips, vfx
 )
-from PIL import Image, ImageDraw, ImageFilter
-import numpy as np
 
 
 # ── Configuration ────────────────────────────────────────────────────────────
@@ -34,7 +32,7 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 
 VIDEO_W, VIDEO_H = 1080, 1920   # Format vertical (Reels / TikTok / Shorts)
 FPS = 24
-FONT = "DejaVu-Sans-Bold"        # Disponible sur Linux sans install
+FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 BG_COLOR = (5, 5, 10)            # Noir profond
 ACCENT_COLOR = (180, 140, 60)    # Or cinématique
 
@@ -125,24 +123,26 @@ def creer_clip_texte(texte: str, duree: float, width: int, height: int) -> Compo
     bg = ColorClip((width, height), color=BG_COLOR, duration=duree)
 
     # Ligne dorée décorative
-    ligne = ColorClip((120, 3), color=ACCENT_COLOR, duration=duree).set_position(("center", height // 2 - 80))
+    ligne = (
+        ColorClip((120, 3), color=ACCENT_COLOR, duration=duree)
+        .with_position(("center", height // 2 - 80))
+    )
 
     # Texte principal
     wrapped = "\n".join(textwrap.wrap(texte, width=28))
     txt = (
         TextClip(
-            wrapped,
-            fontsize=62,
             font=FONT,
+            text=wrapped,
+            font_size=62,
             color="white",
-            align="center",
+            text_align="center",
             method="caption",
-            size=(width - 120, None)
+            size=(width - 120, None),
+            duration=duree
         )
-        .set_duration(duree)
-        .set_position("center")
-        .crossfadein(0.4)
-        .crossfadeout(0.3)
+        .with_position("center")
+        .with_effects([vfx.CrossFadeIn(0.4), vfx.CrossFadeOut(0.3)])
     )
 
     return CompositeVideoClip([bg, ligne, txt])
@@ -154,32 +154,32 @@ def creer_clip_titre(titre: str, duree: float, width: int, height: int) -> Compo
 
     titre_clip = (
         TextClip(
-            titre.upper(),
-            fontsize=54,
             font=FONT,
+            text=titre.upper(),
+            font_size=54,
             color="#B48C3C",
-            align="center",
+            text_align="center",
             method="caption",
-            size=(width - 80, None)
+            size=(width - 80, None),
+            duration=duree
         )
-        .set_duration(duree)
-        .set_position(("center", height // 2 - 60))
-        .crossfadein(0.6)
+        .with_position(("center", height // 2 - 60))
+        .with_effects([vfx.CrossFadeIn(0.6)])
     )
 
     sous_titre = (
         TextClip(
-            "YouFace · Philosophie Moderne",
-            fontsize=28,
             font=FONT,
+            text="YouFace · Philosophie Moderne",
+            font_size=28,
             color="#555555",
-            align="center",
+            text_align="center",
             method="caption",
-            size=(width - 80, None)
+            size=(width - 80, None),
+            duration=duree
         )
-        .set_duration(duree)
-        .set_position(("center", height // 2 + 80))
-        .crossfadein(1.0)
+        .with_position(("center", height // 2 + 80))
+        .with_effects([vfx.CrossFadeIn(1.0)])
     )
 
     return CompositeVideoClip([bg, titre_clip, sous_titre])
@@ -214,10 +214,9 @@ def assembler_video(script: dict, chemin_audio: Path, chemin_video: Path):
         audio = AudioFileClip(str(chemin_audio))
         duree_video = video.duration
         duree_audio = audio.duration
-        # Adapter la durée vidéo à l'audio si nécessaire
         if duree_audio > duree_video:
-            video = video.loop(duration=duree_audio)
-        video = video.set_audio(audio.subclip(0, min(duree_audio, video.duration)))
+            video = video.with_effects([vfx.Loop(duration=duree_audio)])
+        video = video.with_audio(audio.with_end(min(duree_audio, video.duration)))
 
     video.write_videofile(
         str(chemin_video),
