@@ -1,5 +1,7 @@
 anthropic>=0.25.0
-moviepy>=1.0.3
+moviepy>=2.0.0
 pillow>=10.0.0
 requests>=2.31.0
 numpy>=1.24.0
+scipy>=1.11.0
+gtts>=2.5.0
