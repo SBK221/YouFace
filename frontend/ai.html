@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Génération IA — Social Content</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">📱 Social Content</div>
+    <div class="nav-links">
+      <a href="index.html">Posts</a>
+      <a href="ai.html" class="active">Génération IA</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="page-header">
+      <h1>🤖 Génération de contenu IA</h1>
+      <p class="subtitle">Générez des posts et idées avec Claude AI</p>
+    </div>
+
+    <div class="ai-grid">
+      <!-- Génération de post -->
+      <div class="card">
+        <h2>✍️ Générer un post</h2>
+        <div class="form-group">
+          <label>Sujet</label>
+          <input type="text" id="postTopic" placeholder="Ex: lancement produit, astuce marketing...">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Style</label>
+            <select id="postStyle">
+              <option value="engaging">Engageant</option>
+              <option value="pro">Professionnel</option>
+              <option value="humorous">Humoristique</option>
+              <option value="inspirational">Inspirant</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Longueur</label>
+            <select id="postLength">
+              <option value="short">Court</option>
+              <option value="medium" selected>Moyen</option>
+              <option value="long">Long</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" id="generatePostBtn" onclick="generatePost()">
+          <span id="generatePostText">⚡ Générer</span>
+        </button>
+
+        <div id="postResult" class="result-box hidden">
+          <div class="result-section">
+            <label>Post généré</label>
+            <div id="generatedPost" class="result-text"></div>
+          </div>
+          <div class="result-section">
+            <label>Hashtags</label>
+            <div id="generatedHashtags" class="hashtag-list"></div>
+          </div>
+          <div class="result-section">
+            <label>Description YouTube</label>
+            <div id="generatedDescription" class="result-text small"></div>
+          </div>
+          <button class="btn btn-success btn-full" onclick="saveGeneratedPost()">💾 Sauvegarder comme post</button>
+        </div>
+      </div>
+
+      <!-- Génération d'idées -->
+      <div class="card">
+        <h2>💡 Générer des idées</h2>
+        <div class="form-group">
+          <label>Sujet</label>
+          <input type="text" id="ideasTopic" placeholder="Ex: fitness, cuisine, tech...">
+        </div>
+        <div class="form-group">
+          <label>Nombre d'idées</label>
+          <input type="number" id="ideasCount" value="5" min="1" max="20">
+        </div>
+        <button class="btn btn-primary btn-full" id="generateIdeasBtn" onclick="generateIdeas()">
+          <span id="generateIdeasText">💡 Générer des idées</span>
+        </button>
+
+        <div id="ideasResult" class="result-box hidden">
+          <ul id="ideasList" class="ideas-list"></ul>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+  <script type="module" src="js/ai-app.js"></script>
+</body>
+</html>
