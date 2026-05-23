@@ -1,0 +1,23 @@
+{
+  "name": "social-content-automation",
+  "version": "1.0.0",
+  "description": "Automated social media content generator and scheduler",
+  "type": "module",
+  "main": "backend/server.js",
+  "scripts": {
+    "dev": "node --watch backend/server.js",
+    "start": "node backend/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "node-schedule": "^2.1.1",
+    "axios": "^1.4.0",
+    "form-data": "^4.0.0",
+    "@anthropic-ai/sdk": "^0.24.0",
+    "googleapis": "^118.0.0",
+    "nodemailer": "^6.9.0"
+  },
+  "devDependencies": {}
+}

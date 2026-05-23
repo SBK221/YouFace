@@ -39,3 +39,26 @@
 
 # debug information files
 *.dwo
+
+# Node.js
+node_modules/
+.env
+.env.local
+*.log
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# API Keys & Secrets
+*.key
+*.pem
+
+# Generated files
+uploads/
+temp/
