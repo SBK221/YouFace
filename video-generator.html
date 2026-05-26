@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoClip Studio | Générateur Vidéos Réseaux Sociaux</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#07090f;--surface:#0f1420;--surface2:#151c2e;--border:#1e2d4a;--accent:#6c63ff;--accent2:#f72585;--text:#e8eeff;--muted:#8897c4;--green:#22c55e;--red:#ef4444;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:1.5rem;overflow-x:hidden}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif}
+.app{max-width:1300px;margin:0 auto;display:grid;grid-template-rows:auto 1fr;gap:1.5rem}
+.header{text-align:center;padding:1.5rem;background:linear-gradient(135deg,rgba(108,99,255,.15),rgba(247,37,133,.1));border:1px solid rgba(108,99,255,.3);border-radius:1.5rem}
+.header h1{font-size:2.2rem;background:linear-gradient(135deg,#fff,#c084fc,#6c63ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.header p{color:var(--muted);margin-top:.4rem;font-size:.9rem}
+.platforms{display:flex;gap:.5rem;justify-content:center;margin-top:.8rem;flex-wrap:wrap}
+.platform-badge{padding:.25rem .8rem;border-radius:2rem;font-size:.75rem;font-weight:600;border:1px solid}
+.pb-yt{color:#ff4444;border-color:#ff4444;background:rgba(255,68,68,.1)}
+.pb-tt{color:#69c9d0;border-color:#69c9d0;background:rgba(105,201,208,.1)}
+.pb-ig{color:#e1306c;border-color:#e1306c;background:rgba(225,48,108,.1)}
+.workspace{display:grid;grid-template-columns:340px 1fr 280px;gap:1.5rem;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:1.2rem;padding:1.2rem;display:flex;flex-direction:column;gap:1rem}
+.panel-title{font-size:.95rem;font-weight:600;color:var(--text);display:flex;align-items:center;gap:.5rem;padding-bottom:.6rem;border-bottom:1px solid var(--border)}
+.field{display:flex;flex-direction:column;gap:.4rem}
+label{font-size:.78rem;font-weight:500;color:var(--muted);letter-spacing:.3px}
+input,textarea,select{background:#0a0e1a;border:1px solid var(--border);border-radius:.7rem;padding:.6rem .9rem;color:var(--text);font-size:.85rem;font-family:inherit;transition:.15s;width:100%}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,.2)}
+textarea{resize:vertical;min-height:70px}
+input[type=color]{padding:.3rem;height:36px;cursor:pointer}
+input[type=range]{padding:0;cursor:pointer;accent-color:var(--accent)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.btn{border:none;border-radius:.8rem;padding:.6rem 1.1rem;font-weight:600;font-size:.82rem;cursor:pointer;transition:.15s;font-family:inherit}
+.btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-primary{background:linear-gradient(95deg,var(--accent),#9b8eff);color:#fff;box-shadow:0 4px 15px rgba(108,99,255,.35)}
+.btn-danger{background:linear-gradient(95deg,var(--accent2),#ff6b9d);color:#fff;box-shadow:0 4px 15px rgba(247,37,133,.3)}
+.btn-secondary{background:var(--surface2);border:1px solid var(--border);color:var(--text)}
+.btn-full{width:100%;padding:.75rem}
+.slides-list{display:flex;flex-direction:column;gap:.5rem;max-height:320px;overflow-y:auto}
+.slide-item{background:var(--surface2);border:1px solid var(--border);border-radius:.7rem;padding:.6rem .8rem;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:.6rem}
+.slide-item:hover,.slide-item.active{border-color:var(--accent);background:rgba(108,99,255,.1)}
+.slide-num{background:var(--accent);color:#fff;width:22px;height:22px;border-radius:50%;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.slide-info{flex:1;overflow:hidden}
+.slide-info .title{font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slide-info .sub{font-size:.7rem;color:var(--muted)}
+.slide-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:.1rem .3rem;border-radius:.3rem;transition:.15s}
+.slide-del:hover{color:var(--red);background:rgba(239,68,68,.1)}
+.canvas-area{display:flex;flex-direction:column;gap:1rem;align-items:center}
+.canvas-wrapper{position:relative;background:#000;border-radius:1rem;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.7);border:2px solid var(--border)}
+canvas{display:block}
+.canvas-controls{display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;justify-content:center}
+.timeline{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:.8rem;padding:.8rem;display:flex;flex-direction:column;gap:.5rem}
+.timeline-label{font-size:.75rem;color:var(--muted);display:flex;justify-content:space-between}
+.timeline-bar{width:100%;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;cursor:pointer}
+.timeline-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px;transition:.1s linear;pointer-events:none}
+.timeline-slides{display:flex;gap:2px;margin-top:.3rem}
+.tl-slide{flex:1;height:4px;border-radius:2px;background:var(--border)}
+.tl-slide.active{background:var(--accent2)}
+.status-bar{background:rgba(0,0,0,.5);border:1px solid var(--border);border-radius:.7rem;padding:.6rem .9rem;font-size:.78rem;font-family:monospace;border-left:3px solid var(--accent);min-height:36px}
+.export-stats{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:.7rem;padding:.6rem;text-align:center}
+.stat-val{font-size:1.1rem;font-weight:700;color:var(--accent)}
+.stat-lbl{font-size:.68rem;color:var(--muted);margin-top:.1rem}
+.progress-wrap{background:var(--surface2);border-radius:.5rem;overflow:hidden;height:6px}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:.2s}
+.tabs{display:flex;gap:.3rem;background:var(--surface2);padding:.3rem;border-radius:.8rem}
+.tab{flex:1;padding:.4rem;border:none;background:none;color:var(--muted);cursor:pointer;border-radius:.5rem;font-size:.78rem;font-weight:600;transition:.15s;font-family:inherit}
+.tab.active{background:var(--accent);color:#fff}
+.trans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem}
+.trans-btn{padding:.4rem;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;border-radius:.5rem;font-size:.72rem;font-weight:600;transition:.15s;text-align:center}
+.trans-btn:hover,.trans-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(108,99,255,.1)}
+.format-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem}
+.format-btn{padding:.5rem .3rem;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;border-radius:.5rem;font-size:.7rem;font-weight:600;transition:.15s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.2rem}
+.format-btn:hover,.format-btn.active{border-color:var(--accent);color:var(--text);background:rgba(108,99,255,.15)}
+.format-icon{font-size:1.2rem}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--surface)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+@media(max-width:1100px){.workspace{grid-template-columns:1fr 1fr}.workspace .canvas-area{grid-column:1/-1;order:-1}}
+@media(max-width:700px){body{padding:.8rem}.workspace{grid-template-columns:1fr}.header h1{font-size:1.6rem}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>⚡ AutoClip Studio</h1>
+    <p>Créez des vidéos courtes professionnelles pour les réseaux sociaux en quelques clics</p>
+    <div class="platforms">
+      <span class="platform-badge pb-yt">▶ YouTube Shorts</span>
+      <span class="platform-badge pb-tt">♪ TikTok</span>
+      <span class="platform-badge pb-ig">◎ Instagram Reels</span>
+    </div>
+  </div>
+  <div class="workspace">
+    <div style="display:flex;flex-direction:column;gap:1rem">
+      <div class="panel">
+        <div class="panel-title">🎬 Format de sortie</div>
+        <div class="format-grid">
+          <button class="format-btn active" onclick="setFormat('9:16')" id="fmt-916"><span class="format-icon">📱</span>9:16<br><small>Shorts/TikTok</small></button>
+          <button class="format-btn" onclick="setFormat('1:1')" id="fmt-11"><span class="format-icon">⬛</span>1:1<br><small>Instagram</small></button>
+          <button class="format-btn" onclick="setFormat('16:9')" id="fmt-169"><span class="format-icon">🖥️</span>16:9<br><small>YouTube</small></button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🃏 Slides (<span id="slideCount">0</span>)</div>
+        <div class="slides-list" id="slidesList"></div>
+        <button class="btn btn-secondary" onclick="addSlide()">+ Ajouter une slide</button>
+      </div>
+      <div class="panel">
+        <div class="panel-title">✏️ Éditer la slide</div>
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('content',this)">Contenu</button>
+          <button class="tab" onclick="switchTab('style',this)">Style</button>
+          <button class="tab" onclick="switchTab('anim',this)">Animation</button>
+        </div>
+        <div id="tab-content"><div style="display:flex;flex-direction:column;gap:.7rem">
+          <div class="field"><label>Titre principal</label><input type="text" id="slideTitle" placeholder="Votre titre..." oninput="updateCurrentSlide()"></div>
+          <div class="field"><label>Sous-titre</label><textarea id="slideSubtitle" rows="2" oninput="updateCurrentSlide()"></textarea></div>
+          <div class="field"><label>Emoji</label><input type="text" id="slideEmoji" maxlength="4" oninput="updateCurrentSlide()"></div>
+          <div class="field"><label>Durée (s)</label><input type="range" id="slideDuration" min="1" max="8" step="0.5" value="3" oninput="updateCurrentSlide();document.getElementById('durVal').textContent=this.value+'s'"><span id="durVal" style="font-size:.75rem;color:var(--muted)">3s</span></div>
+        </div></div>
+        <div id="tab-style" style="display:none"><div style="display:flex;flex-direction:column;gap:.7rem">
+          <div class="row"><div class="field"><label>Fond 1</label><input type="color" id="slideBgColor" value="#0f0c29" oninput="updateCurrentSlide()"></div><div class="field"><label>Fond 2</label><input type="color" id="slideBgColor2" value="#302b63" oninput="updateCurrentSlide()"></div></div>
+          <div class="row"><div class="field"><label>Titre</label><input type="color" id="slideTitleColor" value="#ffffff" oninput="updateCurrentSlide()"></div><div class="field"><label>Accent</label><input type="color" id="slideAccentColor" value="#6c63ff" oninput="updateCurrentSlide()"></div></div>
+          <div class="field"><label>Style fond</label><select id="slideBgStyle" onchange="updateCurrentSlide()"><option value="gradient">Dégradé</option><option value="solid">Uni</option><option value="radial">Radial</option><option value="diagonal">Diagonal</option></select></div>
+          <div class="field"><label>Taille titre</label><input type="range" id="slideFontSize" min="20" max="80" value="48" oninput="updateCurrentSlide()"></div>
+        </div></div>
+        <div id="tab-anim" style="display:none"><div style="display:flex;flex-direction:column;gap:.7rem">
+          <div class="field"><label>Transition</label></div>
+          <div class="trans-grid">
+            <button class="trans-btn active" onclick="setTransition('fade',this)">Fondu</button>
+            <button class="trans-btn" onclick="setTransition('slide-up',this)">Montée</button>
+            <button class="trans-btn" onclick="setTransition('slide-down',this)">Descente</button>
+            <button class="trans-btn" onclick="setTransition('zoom',this)">Zoom</button>
+            <button class="trans-btn" onclick="setTransition('bounce',this)">Rebond</button>
+            <button class="trans-btn" onclick="setTransition('typewriter',this)">Machine</button>
+          </div>
+          <div class="field"><label>Vitesse</label><select id="slideAnimSpeed" onchange="updateCurrentSlide()"><option value="fast">Rapide</option><option value="normal" selected>Normal</option><option value="slow">Lent</option></select></div>
+        </div></div>
+      </div>
+    </div>
+    <div class="canvas-area">
+      <div class="canvas-wrapper"><canvas id="previewCanvas"></canvas></div>
+      <div class="canvas-controls">
+        <button class="btn btn-secondary" onclick="prevSlide()">⏮ Préc.</button>
+        <button class="btn btn-primary" id="playBtn" onclick="togglePlay()">▶ Lecture</button>
+        <button class="btn btn-secondary" onclick="nextSlide()">Suiv. ⏭</button>
+        <button class="btn btn-secondary" onclick="resetPreview()">↺ Reset</button>
+      </div>
+      <div class="timeline">
+        <div class="timeline-label"><span id="timeElapsed">0.0s</span><span id="timeTotalEl">0.0s</span></div>
+        <div class="timeline-bar" onclick="seekTimeline(event)"><div class="timeline-fill" id="timelineFill"></div></div>
+        <div class="timeline-slides" id="tlSlides"></div>
+      </div>
+      <div class="status-bar" id="statusBar">✅ Prêt — Ajoutez des slides et appuyez sur Lecture</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:1rem">
+      <div class="panel">
+        <div class="panel-title">📊 Infos vidéo</div>
+        <div class="export-stats">
+          <div class="stat-box"><div class="stat-val" id="statDur">0s</div><div class="stat-lbl">Durée</div></div>
+          <div class="stat-box"><div class="stat-val" id="statSlides">0</div><div class="stat-lbl">Slides</div></div>
+          <div class="stat-box"><div class="stat-val" id="statFmt">9:16</div><div class="stat-lbl">Format</div></div>
+          <div class="stat-box"><div class="stat-val" id="statRes">-</div><div class="stat-lbl">Résolution</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🎵 Musique de fond</div>
+        <div class="field"><label>Importer audio</label><input type="file" id="audioFile" accept="audio/*" onchange="loadAudio(this)" style="font-size:.75rem;padding:.4rem"></div>
+        <div id="audioInfo" style="font-size:.75rem;color:var(--muted)">Aucune musique chargée</div>
+        <div class="field"><label>Volume <span id="volVal">70%</span></label><input type="range" id="audioVolume" min="0" max="100" value="70" oninput="document.getElementById('volVal').textContent=this.value+'%'"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">⚙️ Qualité export</div>
+        <div class="field"><label>Qualité</label><select id="exportQuality"><option value="high">Haute</option><option value="medium" selected>Moyenne</option><option value="low">Légère</option></select></div>
+        <div class="field"><label>FPS</label><select id="exportFps"><option value="30" selected>30 FPS</option><option value="60">60 FPS</option><option value="24">24 FPS</option></select></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🚀 Export</div>
+        <div class="progress-wrap" id="progressWrap" style="display:none;margin-bottom:.5rem"><div class="progress-bar" id="progressBar"></div></div>
+        <div style="display:flex;flex-direction:column;gap:.5rem">
+          <button class="btn btn-danger btn-full" onclick="exportVideo()" id="exportBtn">🎬 Exporter la vidéo</button>
+          <button class="btn btn-secondary btn-full" onclick="loadTemplate()">📋 Template aléatoire</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">💡 Templates rapides</div>
+        <div style="display:flex;flex-direction:column;gap:.4rem">
+          <button class="btn btn-secondary" style="font-size:.75rem;text-align:left;padding:.5rem .8rem" onclick="applyTemplate('motivation')">💪 Motivation / Citation</button>
+          <button class="btn btn-secondary" style="font-size:.75rem;text-align:left;padding:.5rem .8rem" onclick="applyTemplate('product')">🛍️ Promotion produit</button>
+          <button class="btn btn-secondary" style="font-size:.75rem;text-align:left;padding:.5rem .8rem" onclick="applyTemplate('news')">📰 Actualité / Info</button>
+          <button class="btn btn-secondary" style="font-size:.75rem;text-align:left;padding:.5rem .8rem" onclick="applyTemplate('countdown')">⏳ Compte à rebours</button>
+          <button class="btn btn-secondary" style="font-size:.75rem;text-align:left;padding:.5rem .8rem" onclick="applyTemplate('tutorial')">🎓 Tutoriel étape par étape</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+let slides=[],currentSlide=0,isPlaying=false,playInterval=null,playStartTime=null,playOffset=0,format='9:16',audioBuffer=null,recordedBlob=null;
+const canvas=document.getElementById('previewCanvas'),ctx=canvas.getContext('2d');
+const FORMATS={'9:16':{w:360,h:640},'1:1':{w:480,h:480},'16:9':{w:640,h:360}};
+function init(){setFormat('9:16');applyTemplate('motivation');}
+function setFormat(f){format=f;document.querySelectorAll('.format-btn').forEach(b=>b.classList.remove('active'));document.getElementById('fmt-'+f.replace(':','')).classList.add('active');const{w,h}=FORMATS[f];canvas.width=w;canvas.height=h;const scale=Math.min(1,520/h,500/w);canvas.style.width=(w*scale)+'px';canvas.style.height=(h*scale)+'px';document.getElementById('statFmt').textContent=f;document.getElementById('statRes').textContent=w+'×'+h;renderCurrentSlide();}
+function addSlide(data){const s=data||{title:'Nouveau titre',subtitle:'Votre message ici',emoji:'✨',duration:3,bgColor:'#0f0c29',bgColor2:'#302b63',titleColor:'#ffffff',accentColor:'#6c63ff',bgStyle:'gradient',fontSize:48,transition:'fade',animSpeed:'normal'};slides.push(s);currentSlide=slides.length-1;updateUI();selectSlide(currentSlide);}
+function selectSlide(idx){currentSlide=idx;const s=slides[idx];if(!s)return;document.getElementById('slideTitle').value=s.title;document.getElementById('slideSubtitle').value=s.subtitle;document.getElementById('slideEmoji').value=s.emoji||'';document.getElementById('slideDuration').value=s.duration;document.getElementById('durVal').textContent=s.duration+'s';document.getElementById('slideBgColor').value=s.bgColor;document.getElementById('slideBgColor2').value=s.bgColor2;document.getElementById('slideTitleColor').value=s.titleColor;document.getElementById('slideAccentColor').value=s.accentColor;document.getElementById('slideBgStyle').value=s.bgStyle;document.getElementById('slideFontSize').value=s.fontSize;document.getElementById('slideAnimSpeed').value=s.animSpeed;document.querySelectorAll('.slide-item').forEach((el,i)=>el.classList.toggle('active',i===idx));renderCurrentSlide();}
+function updateCurrentSlide(){if(!slides[currentSlide])return;const s=slides[currentSlide];s.title=document.getElementById('slideTitle').value;s.subtitle=document.getElementById('slideSubtitle').value;s.emoji=document.getElementById('slideEmoji').value;s.duration=parseFloat(document.getElementById('slideDuration').value);s.bgColor=document.getElementById('slideBgColor').value;s.bgColor2=document.getElementById('slideBgColor2').value;s.titleColor=document.getElementById('slideTitleColor').value;s.accentColor=document.getElementById('slideAccentColor').value;s.bgStyle=document.getElementById('slideBgStyle').value;s.fontSize=parseInt(document.getElementById('slideFontSize').value);s.animSpeed=document.getElementById('slideAnimSpeed').value;updateUI();renderCurrentSlide();}
+function deleteSlide(idx,e){e.stopPropagation();slides.splice(idx,1);if(currentSlide>=slides.length)currentSlide=slides.length-1;updateUI();if(slides.length>0)selectSlide(currentSlide);else renderEmpty();}
+function setTransition(t,btn){if(!slides[currentSlide])return;slides[currentSlide].transition=t;document.querySelectorAll('.trans-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+function updateUI(){const list=document.getElementById('slidesList');list.innerHTML='';slides.forEach((s,i)=>{const el=document.createElement('div');el.className='slide-item'+(i===currentSlide?' active':'');el.onclick=()=>selectSlide(i);el.innerHTML=`<div class="slide-num">${i+1}</div><div class="slide-info"><div class="title">${s.emoji} ${s.title||'Sans titre'}</div><div class="sub">${s.duration}s · ${s.transition}</div></div><button class="slide-del" onclick="deleteSlide(${i},event)">×</button>`;list.appendChild(el);});const total=slides.reduce((a,s)=>a+s.duration,0);document.getElementById('slideCount').textContent=slides.length;document.getElementById('statSlides').textContent=slides.length;document.getElementById('statDur').textContent=total.toFixed(1)+'s';const tlEl=document.getElementById('tlSlides');tlEl.innerHTML='';slides.forEach((_,i)=>{const d=document.createElement('div');d.className='tl-slide'+(i===currentSlide?' active':'');tlEl.appendChild(d);});document.getElementById('timeTotalEl').textContent=total.toFixed(1)+'s';}
+function switchTab(name,btn){['content','style','anim'].forEach(t=>document.getElementById('tab-'+t).style.display=t===name?'block':'none');document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+function hexToRgb(hex){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return`${r},${g},${b}`;}
+function renderSlide(slide,progress=1,c=ctx){const{w,h}=FORMATS[format];let bg;if(slide.bgStyle==='gradient')bg=c.createLinearGradient(0,0,0,h);else if(slide.bgStyle==='diagonal')bg=c.createLinearGradient(0,0,w,h);else if(slide.bgStyle==='radial')bg=c.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.max(w,h)*0.7);else{c.fillStyle=slide.bgColor;c.fillRect(0,0,w,h);bg=null;}if(bg){bg.addColorStop(0,slide.bgColor);bg.addColorStop(1,slide.bgColor2);c.fillStyle=bg;c.fillRect(0,0,w,h);}c.strokeStyle=`rgba(${hexToRgb(slide.accentColor)},0.15)`;c.lineWidth=1;for(let i=0;i<5;i++){c.beginPath();c.moveTo(0,(h/5)*i+h/10);c.lineTo(w,(h/5)*i+h/10);c.stroke();}c.fillStyle=slide.accentColor;c.fillRect(w*0.1,h*0.08,w*0.8*progress,4);const t=slide.transition,spd=slide.animSpeed==='fast'?0.3:slide.animSpeed==='slow'?1:0.6,ap=Math.min(1,progress/(spd/(slide.duration||3)));let yOff=0,alpha=1,scale=1;if(t==='fade')alpha=ap;else if(t==='slide-up')yOff=(1-ap)*60;else if(t==='slide-down')yOff=-(1-ap)*60;else if(t==='zoom'){scale=0.5+ap*0.5;alpha=ap;}else if(t==='bounce'){const bp=ap<0.7?ap/0.7:1-(ap-0.7)/0.3*0.15;yOff=(1-bp)*40;alpha=Math.min(1,ap*2);}c.save();c.globalAlpha=alpha;if(scale!==1){c.translate(w/2,h/2);c.scale(scale,scale);c.translate(-w/2,-h/2);}if(slide.emoji){c.font=`${Math.floor(slide.fontSize*0.9)}px serif`;c.textAlign='center';c.textBaseline='middle';c.fillText(slide.emoji,w/2,h*0.3+yOff);}const fs=slide.fontSize;c.font=`700 ${fs}px 'Space Grotesk',system-ui`;c.textAlign='center';c.textBaseline='middle';c.fillStyle=slide.titleColor;c.shadowColor=`rgba(${hexToRgb(slide.accentColor)},0.5)`;c.shadowBlur=20;const tt=t==='typewriter'?slide.title.slice(0,Math.floor(ap*slide.title.length)):slide.title;wrapText(c,tt,w/2,h*0.48+yOff,w*0.85,fs*1.3);c.shadowBlur=0;if(slide.subtitle){c.font=`400 ${Math.floor(fs*0.36)}px Inter,system-ui`;c.fillStyle='rgba(255,255,255,0.75)';const st=t==='typewriter'?slide.subtitle.slice(0,Math.floor(Math.max(0,ap*2-1)*slide.subtitle.length)):slide.subtitle;wrapText(c,st,w/2,h*0.68+yOff,w*0.8,fs*0.42);}c.fillStyle=`rgba(${hexToRgb(slide.accentColor)},0.5)`;c.fillRect(w*0.3,h*0.87,w*0.4,2);c.restore();}
+function wrapText(c,text,x,y,maxW,lineH){if(!text)return;const words=text.split(' ');let line='';const lines=[];for(const w of words){const test=line?line+' '+w:w;if(c.measureText(test).width>maxW&&line){lines.push(line);line=w;}else line=test;}if(line)lines.push(line);const totalH=lines.length*lineH;lines.forEach((l,i)=>c.fillText(l,x,y-totalH/2+i*lineH+lineH/2));}
+function renderCurrentSlide(p=1){if(!slides[currentSlide]){renderEmpty();return;}renderSlide(slides[currentSlide],p);}
+function renderEmpty(){const{w,h}=FORMATS[format];ctx.fillStyle='#0a0e1a';ctx.fillRect(0,0,w,h);ctx.font='16px Inter';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='rgba(255,255,255,0.2)';ctx.fillText('Ajoutez votre première slide →',w/2,h/2);}
+function getTotalDuration(){return slides.reduce((a,s)=>a+s.duration,0);}
+function togglePlay(){if(isPlaying)stopPlay();else startPlay();}
+function startPlay(){if(!slides.length){setStatus('Ajoutez des slides avant la lecture',true);return;}isPlaying=true;document.getElementById('playBtn').textContent='⏸ Pause';playStartTime=performance.now()-playOffset*1000;animate();}
+function stopPlay(){isPlaying=false;document.getElementById('playBtn').textContent='▶ Lecture';if(playInterval)cancelAnimationFrame(playInterval);}
+function resetPreview(){stopPlay();playOffset=0;currentSlide=0;updateUI();renderCurrentSlide();document.getElementById('timeElapsed').textContent='0.0s';document.getElementById('timelineFill').style.width='0%';}
+function prevSlide(){if(currentSlide>0){currentSlide--;selectSlide(currentSlide);}}
+function nextSlide(){if(currentSlide<slides.length-1){currentSlide++;selectSlide(currentSlide);}}
+function seekTimeline(e){const ratio=e.offsetX/e.currentTarget.offsetWidth;playOffset=ratio*getTotalDuration();if(!isPlaying){let acc=0;for(let i=0;i<slides.length;i++){if(playOffset<=acc+slides[i].duration){currentSlide=i;renderSlide(slides[i],(playOffset-acc)/slides[i].duration);selectSlide(i);break;}acc+=slides[i].duration;}}}
+function animate(){if(!isPlaying)return;const elapsed=(performance.now()-playStartTime)/1000,total=getTotalDuration();if(elapsed>=total){stopPlay();playOffset=0;renderCurrentSlide(1);return;}playOffset=elapsed;document.getElementById('timelineFill').style.width=(elapsed/total*100)+'%';let acc=0;for(let i=0;i<slides.length;i++){if(elapsed<=acc+slides[i].duration){if(currentSlide!==i){currentSlide=i;document.querySelectorAll('.slide-item').forEach((el,j)=>el.classList.toggle('active',j===i));document.querySelectorAll('.tl-slide').forEach((el,j)=>el.classList.toggle('active',j===i));}renderSlide(slides[i],(elapsed-acc)/slides[i].duration);break;}acc+=slides[i].duration;}document.getElementById('timeElapsed').textContent=elapsed.toFixed(1)+'s';playInterval=requestAnimationFrame(animate);}
+function setStatus(msg,isError=false){const el=document.getElementById('statusBar');el.innerHTML=isError?`⚠️ ${msg}`:`✅ ${msg}`;el.style.borderLeftColor=isError?'var(--red)':'var(--accent)';}
+function loadAudio(input){const file=input.files[0];if(!file)return;document.getElementById('audioInfo').textContent=`🎵 ${file.name}`;const reader=new FileReader();reader.onload=async e=>{const ac=new AudioContext();audioBuffer=await ac.decodeAudioData(e.target.result);document.getElementById('audioInfo').textContent=`🎵 ${file.name} (${audioBuffer.duration.toFixed(1)}s)`;};reader.readAsArrayBuffer(file);}
+async function exportVideo(){if(!slides.length){setStatus('Aucune slide à exporter',true);return;}const btn=document.getElementById('exportBtn');btn.disabled=true;btn.textContent='⏳ Enregistrement...';document.getElementById('progressWrap').style.display='block';const fps=parseInt(document.getElementById('exportFps').value),quality=document.getElementById('exportQuality').value,bitrate=quality==='high'?4000000:quality==='medium'?2000000:800000,{w,h}=FORMATS[format],off=document.createElement('canvas');off.width=w;off.height=h;const offCtx=off.getContext('2d'),total=getTotalDuration(),recAC=new AudioContext(),recDest=recAC.createMediaStreamDestination();if(audioBuffer){const src=recAC.createBufferSource();src.buffer=audioBuffer;const gain=recAC.createGain();gain.gain.value=parseInt(document.getElementById('audioVolume').value)/100;src.connect(gain);gain.connect(recDest);src.start();}else{const sil=recAC.createBuffer(2,recAC.sampleRate*total,recAC.sampleRate),src=recAC.createBufferSource();src.buffer=sil;src.connect(recDest);src.start();}const stream=off.captureStream(fps),combined=new MediaStream([...stream.getVideoTracks(),...recDest.stream.getAudioTracks()]),recorder=new MediaRecorder(combined,{mimeType:'video/webm',videoBitsPerSecond:bitrate});let chunks=[];recorder.ondataavailable=e=>e.data.size&&chunks.push(e.data);const done=new Promise(res=>recorder.onstop=()=>res(new Blob(chunks,{type:'video/webm'})));recorder.start(100);const totalFrames=Math.ceil(total*fps);let frame=0;const drawFrame=()=>{if(frame>=totalFrames){recorder.stop();return;}const elapsed=frame/fps;let acc=0;for(let i=0;i<slides.length;i++){if(elapsed<=acc+slides[i].duration){renderSlide(slides[i],(elapsed-acc)/slides[i].duration,offCtx);break;}acc+=slides[i].duration;}frame++;document.getElementById('progressBar').style.width=(frame/totalFrames*100)+'%';if(frame%5===0)setStatus(`Export: ${Math.round(frame/totalFrames*100)}%`);setTimeout(drawFrame,1000/fps);};drawFrame();const blob=await done;recordedBlob=blob;const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`autoclip_${format.replace(':','x')}_${Date.now()}.webm`;a.click();btn.disabled=false;btn.textContent='🎬 Exporter la vidéo';document.getElementById('progressWrap').style.display='none';setStatus(`✅ Vidéo exportée ! (${(blob.size/1024/1024).toFixed(2)} MB)`);}
+function applyTemplate(type){slides=[];const T={motivation:[{title:'Croyez en vous',subtitle:'Chaque grand voyage commence par un premier pas.',emoji:'🔥',duration:3.5,bgColor:'#1a0533',bgColor2:'#6c063d',titleColor:'#ffffff',accentColor:'#f72585',bgStyle:'gradient',fontSize:52,transition:'zoom',animSpeed:'normal'},{title:'Agissez maintenant',subtitle:"Le meilleur moment pour commencer, c'est aujourd'hui.",emoji:'⚡',duration:3,bgColor:'#0d0221',bgColor2:'#1a0a4a',titleColor:'#fff',accentColor:'#6c63ff',bgStyle:'diagonal',fontSize:50,transition:'slide-up',animSpeed:'fast'},{title:'Ne lâchez jamais',subtitle:'La persévérance est la clé du succès.',emoji:'💪',duration:3.5,bgColor:'#001233',bgColor2:'#023e8a',titleColor:'#fff',accentColor:'#4cc9f0',bgStyle:'gradient',fontSize:52,transition:'bounce',animSpeed:'normal'},{title:'Suivez-nous !',subtitle:'@votrecompte • Nouvel épisode chaque semaine',emoji:'📲',duration:2.5,bgColor:'#10002b',bgColor2:'#240046',titleColor:'#fff',accentColor:'#9d4edd',bgStyle:'radial',fontSize:44,transition:'fade',animSpeed:'slow'}],product:[{title:'NOUVEAU PRODUIT',subtitle:'Découvrez notre dernière innovation.',emoji:'🛍️',duration:3,bgColor:'#0a0a0a',bgColor2:'#1a1a2e',titleColor:'#ffd700',accentColor:'#ffd700',bgStyle:'gradient',fontSize:54,transition:'zoom',animSpeed:'fast'},{title:'Qualité Premium',subtitle:'Fabriqué avec les meilleurs matériaux.',emoji:'⭐',duration:3,bgColor:'#1a0000',bgColor2:'#4a0000',titleColor:'#fff',accentColor:'#ff6b6b',bgStyle:'diagonal',fontSize:50,transition:'slide-up',animSpeed:'normal'},{title:'-50% CE SOIR',subtitle:'Offre limitée · Minuit ce soir seulement',emoji:'🔥',duration:3.5,bgColor:'#1a0000',bgColor2:'#600000',titleColor:'#fff',accentColor:'#ff4444',bgStyle:'radial',fontSize:58,transition:'bounce',animSpeed:'fast'},{title:'Commandez maintenant',subtitle:'Livraison gratuite dès 50€ · Lien en bio',emoji:'🛒',duration:3,bgColor:'#001a0a',bgColor2:'#004a1a',titleColor:'#fff',accentColor:'#22c55e',bgStyle:'gradient',fontSize:46,transition:'typewriter',animSpeed:'normal'}],news:[{title:'BREAKING NEWS',subtitle:"Une nouvelle majeure vient d'être annoncée.",emoji:'📰',duration:3,bgColor:'#000',bgColor2:'#1a1a1a',titleColor:'#ff4444',accentColor:'#ff4444',bgStyle:'solid',fontSize:54,transition:'fade',animSpeed:'fast'},{title:'Ce que vous devez savoir',subtitle:"Les points essentiels de l'actualité du jour.",emoji:'📋',duration:3.5,bgColor:'#0a0a0f',bgColor2:'#0f0f2a',titleColor:'#fff',accentColor:'#6c8eff',bgStyle:'gradient',fontSize:46,transition:'slide-up',animSpeed:'normal'},{title:'Analyse complète',subtitle:'Notre équipe décrypte les enjeux pour vous.',emoji:'🔍',duration:3,bgColor:'#0f1a00',bgColor2:'#1a3300',titleColor:'#fff',accentColor:'#84cc16',bgStyle:'diagonal',fontSize:48,transition:'zoom',animSpeed:'normal'},{title:"Suivez l'info en direct",subtitle:'Notifications activées → Lien en bio',emoji:'🔔',duration:2.5,bgColor:'#1a0a00',bgColor2:'#3a1800',titleColor:'#fff',accentColor:'#fb923c',bgStyle:'gradient',fontSize:44,transition:'typewriter',animSpeed:'slow'}],countdown:[{title:'DANS 3 JOURS',subtitle:"Quelque chose d'incroyable arrive...",emoji:'⏳',duration:3,bgColor:'#000',bgColor2:'#0a0010',titleColor:'#c084fc',accentColor:'#c084fc',bgStyle:'radial',fontSize:60,transition:'zoom',animSpeed:'fast'},{title:'DANS 2 JOURS',subtitle:'Vous êtes prêts ? 🤩',emoji:'😱',duration:3,bgColor:'#000',bgColor2:'#100010',titleColor:'#f0abfc',accentColor:'#e879f9',bgStyle:'radial',fontSize:60,transition:'zoom',animSpeed:'fast'},{title:'DEMAIN !',subtitle:'Restez connectés — ça commence demain à midi.',emoji:'🚀',duration:3,bgColor:'#000',bgColor2:'#0a1000',titleColor:'#86efac',accentColor:'#22c55e',bgStyle:'radial',fontSize:60,transition:'bounce',animSpeed:'fast'},{title:"C'EST PARTI !",subtitle:"L'évènement tant attendu est enfin là.",emoji:'🎉',duration:4,bgColor:'#1a0a00',bgColor2:'#4a2000',titleColor:'#ffd700',accentColor:'#f59e0b',bgStyle:'radial',fontSize:64,transition:'zoom',animSpeed:'slow'}],tutorial:[{title:'ÉTAPE 1',subtitle:"Ouvrez l'application et créez un compte.",emoji:'📱',duration:4,bgColor:'#001a33',bgColor2:'#003366',titleColor:'#fff',accentColor:'#38bdf8',bgStyle:'gradient',fontSize:56,transition:'slide-up',animSpeed:'normal'},{title:'ÉTAPE 2',subtitle:'Renseignez vos informations personnelles.',emoji:'✍️',duration:4,bgColor:'#001a0f',bgColor2:'#003320',titleColor:'#fff',accentColor:'#4ade80',bgStyle:'gradient',fontSize:56,transition:'slide-up',animSpeed:'normal'},{title:'ÉTAPE 3',subtitle:'Validez votre email — Vérifiez vos spams.',emoji:'📧',duration:4,bgColor:'#1a0a33',bgColor2:'#2d1466',titleColor:'#fff',accentColor:'#a78bfa',bgStyle:'gradient',fontSize:56,transition:'slide-up',animSpeed:'normal'},{title:'Terminé ! 🎊',subtitle:'Vous pouvez maintenant utiliser toutes les fonctionnalités.',emoji:'✅',duration:3.5,bgColor:'#001a0a',bgColor2:'#004a1a',titleColor:'#fff',accentColor:'#22c55e',bgStyle:'radial',fontSize:52,transition:'bounce',animSpeed:'slow'}]};(T[type]||T.motivation).forEach(s=>addSlide(s));setStatus(`Template "${type}" chargé — ${slides.length} slides prêtes !`);}
+function loadTemplate(){const types=['motivation','product','news','countdown','tutorial'];applyTemplate(types[Math.floor(Math.random()*types.length)]);}
+init();
+</script>
+</body>
+</html>
