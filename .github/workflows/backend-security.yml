@@ -1,0 +1,52 @@
+name: Backend Security and PostgreSQL
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: youface_test
+          POSTGRES_USER: youface
+          POSTGRES_PASSWORD: youface_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U youface -d youface_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      TEST_DATABASE_URL: postgres://youface:youface_test_password@127.0.0.1:5432/youface_test
+      TEST_S3_ENDPOINT: http://127.0.0.1:9000
+      TEST_S3_REGION: us-east-1
+      TEST_S3_BUCKET: youface-media
+      TEST_S3_ACCESS_KEY: youface
+      TEST_S3_SECRET_KEY: youface_minio_password
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Start S3-compatible storage
+        run: |
+          docker run -d --name youface-minio -p 9000:9000 \
+            -e MINIO_ROOT_USER=youface \
+            -e MINIO_ROOT_PASSWORD=youface_minio_password \
+            minio/minio:latest server /data
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:9000/minio/health/live; then exit 0; fi
+            sleep 2
+          done
+          docker logs youface-minio
+          exit 1
+      - run: npm ci
+      - run: npm run security:check
+      - run: npm audit --audit-level=high
+      - run: npm test

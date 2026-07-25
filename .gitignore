@@ -1,41 +1,28 @@
-# Prerequisites
-*.d
+node_modules/
+.env
+.env.*
+!.env.example
+data/
+secrets/*
+!secrets/.gitkeep
+*.jks
+*.keystore
+*.p12
+*.mobileprovision
+*.pepk
+*.cer
+*.certSigningRequest
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+# Firebase secrets — NEVER commit these
+**/google-services.json
+**/GoogleService-Info.plist
+*firebase-adminsdk*.json
+firebase-service-account*.json
+FIREBASE_SHA_FINGERPRINTS.txt
 
-# Precompiled Headers
-*.gch
-*.pch
-
-# Linker files
-*.ilk
-
-# Debugger Files
-*.pdb
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-# debug information files
-*.dwo
+android/local.properties
+android/.gradle/
+android/app/build/
+ios/App/DerivedData/
+.DS_Store
+npm-debug.log*

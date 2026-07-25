@@ -1,0 +1,18 @@
+YOUFACE FIREBASE 0.4.2 — ACTION IMMEDIATE
+
+1. Double-cliquer sur 05_CONNECTER_FIREBASE.cmd
+2. Dans Firebase, utiliser exactement:
+   com.youfacetechnologies.youface
+3. Ajouter une app Android, une app Apple et une app Web au même projet Firebase.
+4. Authentication > Sign-in method:
+   - Phone = ON
+   - Google = ON
+   - Email/Password = ON
+5. Authentication > Settings > SMS region policy:
+   autoriser le Sénégal et les pays de test souhaités.
+6. Télécharger google-services.json APRES activation de Google.
+7. Télécharger GoogleService-Info.plist.
+8. Télécharger un JSON de compte de service Firebase Admin.
+9. Donner les chemins au script.
+10. Ajouter SHA-1 et SHA-256 affichés par FIREBASE_SHA_FINGERPRINTS.txt dans Firebase.
+11. Re-télécharger google-services.json après ajout des SHA, puis lancer 06_VALIDER_FIREBASE.cmd.

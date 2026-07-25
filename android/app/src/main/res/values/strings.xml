@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">YouFace</string>
+    <string name="title_activity_main">YouFace</string>
+    <string name="package_name">com.youface.app</string>
+    <string name="custom_url_scheme">com.youface.app</string>
+</resources>
