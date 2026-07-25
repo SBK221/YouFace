@@ -1,0 +1,34 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { loadConfig } from '../server/config.js';
+import { createPool } from '../server/db.js';
+import { runMigrations } from '../server/migrate.js';
+import { createStorage } from '../server/lib/storage.js';
+import { createEventBus } from '../server/lib/event-bus.js';
+import { buildApp } from '../server/app.js';
+import { exchange, mutate } from './helpers.mjs';
+const databaseUrl=process.env.TEST_DATABASE_URL;
+
+test('real PostgreSQL phone/Google auth, social, messaging, moderation and analytics flow', {skip:!databaseUrl}, async t => {
+  const nonce=Date.now().toString(36); const root=await fs.mkdtemp(path.join(os.tmpdir(),'youface-pg-'));
+  const adminSubject=`pg-admin-${nonce}`, userSubject=`pg-phone-${nonce}`;
+  const verifier={configured:true,async verify(token){if(token==='admin')return{provider:'google',subject:adminSubject,email:`pg-admin-${nonce}@youface.test`,phoneE164:null,displayName:'PG Admin'};if(token==='user')return{provider:'phone',subject:userSubject,email:null,phoneE164:`+22177${Date.now().toString().slice(-7)}`,displayName:null};const e=new Error('IDENTITY_TOKEN_INVALID');e.statusCode=401;throw e;}};
+  const config=loadConfig({env:'test',databaseUrl,redisUrl:'',storageDriver:'local',localStorageDir:path.join(root,'storage'),tmpDir:path.join(root,'tmp'),publicDir:path.resolve('public'),bootstrapAdminFirebaseUid:adminSubject,origins:['http://localhost:4173']});
+  await fs.mkdir(config.tmpDir,{recursive:true}); const pool=createPool(config); await runMigrations(pool); const storage=await createStorage(config); const eventBus=await createEventBus(''); const app=await buildApp({config,pool,storage,eventBus,identityVerifier:verifier,logger:false}); await app.ready();
+  t.after(async()=>{await app.close();await eventBus.close();await pool.end();await fs.rm(root,{recursive:true,force:true});});
+  const admin=await exchange(app,'admin'); const user=await exchange(app,'user'); assert.equal(admin.body.user.role,'admin'); assert.equal(user.body.user.authProvider,'phone');
+  const post=await mutate(app,admin,'/api/content/posts',{body:'Publication PostgreSQL réelle complète',visibility:'public'}); assert.equal(post.statusCode,201,post.body); const contentId=post.json().id;
+  let response=await app.inject({method:'GET',url:'/api/feed?limit=20',headers:{cookie:user.cookie}}); assert.ok(response.json().items.some(item=>item.id===contentId));
+  response=await mutate(app,user,`/api/content/${contentId}/like`); assert.equal(response.json().liked,true);
+  response=await mutate(app,user,`/api/content/${contentId}/comments`,{body:'Commentaire PostgreSQL réel'}); assert.equal(response.statusCode,201);
+  response=await mutate(app,user,`/api/content/${contentId}/view`,{watchedSeconds:17}); assert.equal(response.statusCode,200);
+  response=await mutate(app,user,`/api/profiles/${admin.body.user.id}/follow`); assert.equal(response.json().following,true);
+  response=await mutate(app,user,'/api/conversations/direct',{username:admin.body.user.username}); const conversationId=response.json().id;
+  response=await mutate(app,user,`/api/conversations/${conversationId}/messages`,{body:'Message PostgreSQL réel'}); assert.equal(response.statusCode,201);
+  response=await app.inject({method:'GET',url:'/api/creator/analytics',headers:{cookie:admin.cookie}}); assert.equal(response.json().summary.views,1); assert.equal(response.json().summary.followers,1);
+  response=await mutate(app,user,'/api/reports',{targetType:'content',targetId:contentId,reason:'postgres_test_report',details:'Signalement PostgreSQL'}); const reportId=response.json().id;
+  response=await mutate(app,admin,`/api/moderation/reports/${reportId}/action`,{action:'hide_content',reason:'Validation PostgreSQL'}); assert.equal(response.statusCode,200);
+});
