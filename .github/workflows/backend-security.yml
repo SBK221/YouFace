@@ -1,7 +1,13 @@
 name: Backend Security and PostgreSQL
 on:
+  workflow_dispatch:
   push:
+    branches: [ main ]
   pull_request:
+
+concurrency:
+  group: backend-verify-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
