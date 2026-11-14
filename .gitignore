@@ -26,3 +26,12 @@ android/app/build/
 ios/App/DerivedData/
 .DS_Store
 npm-debug.log*
+
+# Generated free Firebase website
+free-dist/
+.firebase/
+
+*-debug.log
+
+# Also ignore dependency symlinks used by local tests
+node_modules

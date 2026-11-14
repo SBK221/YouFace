@@ -1,0 +1,34 @@
+name: Free Firebase website
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+concurrency:
+  group: firebase-free-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            tests/firebase/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm run build:free
+      - run: npm run security:check
+      - run: npm audit --audit-level=high
+      - run: npm ci --prefix tests/firebase
+      - name: Check Firestore access and deletion rules offline
+        env:
+          FIREBASE_EMULATORS_PATH: ${{ runner.temp }}/firebase-emulators
+        run: tests/firebase/node_modules/.bin/firebase emulators:exec --only firestore --project demo-youface-free 'node --test tests/firebase/rules.test.mjs'

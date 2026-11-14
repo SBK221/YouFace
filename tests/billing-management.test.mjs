@@ -11,7 +11,7 @@ async function fixture(t, {customer='cus_owner',account='acct_creator',payouts=t
     accounts:{async retrieve(id){assert.equal(id,account);return{payouts_enabled:payouts,capabilities:{transfers:payouts?'active':'pending'}};}}
   };
   const auth={requireAuth:async request=>{request.auth={id:'viewer',stripe_customer_id:customer,stripe_account_id:account};},requireCsrf:async()=>{}};
-  await billingRoutes(app,{pool:{},auth,stripe,config:{stripeWebhookSecret:'whsec_fixture',stripeCreatorPriceId:'price_fixture',billingCancelUrl:'https://community.example/#settings'}});
+  await billingRoutes(app,{pool:{},auth,stripe,config:{billingEnabled:true,stripeWebhookSecret:'whsec_fixture',stripeCreatorPriceId:'price_fixture',billingCancelUrl:'https://community.example/#settings'}});
   t.after(()=>app.close());
   return{app,calls};
 }
@@ -34,4 +34,13 @@ test('a Connect account identifier alone does not mean payouts are enabled',asyn
   const response=await app.inject({method:'GET',url:'/api/billing/readiness'});
   assert.equal(response.json().payoutReady,false);
   assert.deepEqual(response.json().blockingReasons,[]);
+});
+
+test('free mode refuses every new payment path before contacting Stripe',async t=>{
+  const app=Fastify();t.after(()=>app.close());
+  await billingRoutes(app,{pool:{},auth:{requireAuth:async()=>{},requireCsrf:async()=>{}},stripe:null,config:{billingEnabled:false}});
+  for(const url of ['/api/billing/connect/onboard','/api/billing/creators/any/subscribe','/api/billing/creators/any/tip']){
+    const response=await app.inject({method:'POST',url,payload:{credits:10}});
+    assert.equal(response.statusCode,403);assert.equal(response.json().error,'PAYMENTS_DISABLED');
+  }
 });

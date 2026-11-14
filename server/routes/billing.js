@@ -20,17 +20,26 @@ export async function billingRoutes(app, ctx) {
     done();
   };
 
+  app.addHook('onRequest', async (request, reply) => {
+    const path = request.url.split('?')[0];
+    if (!config.billingEnabled && request.method === 'POST' && (
+      path === '/api/billing/connect/onboard' ||
+      /^\/api\/billing\/creators\/[^/]+\/(?:subscribe|tip)$/.test(path)
+    )) return reply.code(403).send({ error: 'PAYMENTS_DISABLED' });
+  });
+
   app.get('/api/billing/readiness', { preHandler: auth.requireAuth }, async request => {
     const native = isNativeClient(request);
     const storeKey = request.headers['x-youface-platform'] === 'ios' ? config.revenueCatAppleApiKey : config.revenueCatGoogleApiKey;
     const reasons = [];
+    if (!config.billingEnabled) reasons.push('PAYMENTS_DISABLED');
     if (!native && !stripe) reasons.push('STRIPE_SECRET_KEY_MISSING');
     if (!native && !config.stripeWebhookSecret) reasons.push('STRIPE_WEBHOOK_SECRET_MISSING');
     if (!native && !config.stripeCreatorPriceId) reasons.push('STRIPE_CREATOR_PRICE_ID_MISSING');
     if (native && !storeKey) reasons.push('REVENUECAT_PUBLIC_KEY_MISSING');
     if (native && (!config.revenueCatWebhookAuthorization || !config.revenueCatWebhookHmacSecret)) reasons.push('REVENUECAT_WEBHOOK_SECURITY_NOT_CONFIGURED');
     let payoutReady = false;
-    if (!native && stripe && request.auth.stripe_account_id) {
+    if (config.billingEnabled && !native && stripe && request.auth.stripe_account_id) {
       const account = await stripe.accounts.retrieve(request.auth.stripe_account_id);
       payoutReady = Boolean(account.payouts_enabled && account.capabilities?.transfers === 'active');
     }

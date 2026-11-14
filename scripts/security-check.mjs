@@ -16,7 +16,7 @@ async function walk(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
   const files = [];
   for (const entry of entries) {
-    if (['node_modules', 'android', 'ios', '.git', 'tests'].includes(entry.name)) continue;
+    if (['node_modules', 'android', 'ios', '.git', 'tests', 'free-dist', '.firebase'].includes(entry.name)) continue;
     const full = join(dir, entry.name);
     if (entry.isDirectory()) files.push(...await walk(full));
     else files.push(full);

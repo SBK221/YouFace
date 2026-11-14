@@ -32,7 +32,9 @@
     "native:id:check": "node scripts/native-id-check.mjs",
     "preflight:firebase": "npm run native:id:check && npm run firebase:preflight",
     "preflight:production": "node scripts/production-preflight.mjs",
-    "preflight:payments": "node scripts/production-preflight.mjs --payments"
+    "preflight:payments": "node scripts/production-preflight.mjs --payments",
+    "build:free": "node scripts/build-free.mjs",
+    "build:free:release": "node scripts/build-free.mjs --release"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1079.0",

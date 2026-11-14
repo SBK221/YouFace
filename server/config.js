@@ -50,6 +50,7 @@ export function loadConfig(overrides = {}) {
     ffmpegBin: env.FFMPEG_BIN || 'ffmpeg',
     ffprobeBin: env.FFPROBE_BIN || 'ffprobe',
     workerPollMs: int(env.WORKER_POLL_MS, 1000),
+    billingEnabled: bool(env.BILLING_ENABLED, false),
     stripeSecretKey: env.STRIPE_SECRET_KEY || '',
     stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET || '',
     stripeCreatorPriceId: env.STRIPE_CREATOR_PRICE_ID || '',

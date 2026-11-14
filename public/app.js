@@ -1,6 +1,7 @@
 const $ = selector => document.querySelector(selector);
 const app = $('#app');
 const API_BASE = String(window.YOUFACE_CONFIG?.apiBaseUrl || '').replace(/\/$/, '');
+const PAYMENTS_ENABLED = window.YOUFACE_CONFIG?.billingEnabled === true;
 const IS_NATIVE = Boolean(window.Capacitor?.isNativePlatform?.());
 const apiUrl = path => `${API_BASE}${path}`;
 const toast = $('#toast');
@@ -102,7 +103,7 @@ async function exchangeIdentity(idToken) {
   const data = await api('/api/auth/exchange',{method:'POST',body:{idToken}});
   state.user=data.user; state.csrf=data.csrfToken; state.sessionToken=data.sessionToken||null; state.phoneCodeSent=false;
   render(); openEvents();
-  await window.YouFaceBilling?.configure?.(state.user.id).catch(() => {});
+  if (PAYMENTS_ENABLED) await window.YouFaceBilling?.configure?.(state.user.id).catch(() => {});
   await loadFeed(true); await loadRoute();
 }
 
@@ -124,7 +125,7 @@ function homeView() {
 
 function feedMarkup(items) {
   if (!items.length) return `<div class="card empty">Aucune publication. Crée la première publication YouFace.</div>`;
-  return items.map(item => `<article class="card post" data-content-id="${item.id}"><div class="post-head"><div class="mono">${esc(mono(item.author.displayName))}</div><div><strong>${esc(item.author.displayName)}</strong><div class="muted small">@${esc(item.author.username)} · ${new Date(item.createdAt).toLocaleString('fr-FR')}</div></div></div>${item.title?`<h3>${esc(item.title)}</h3>`:''}${item.body?`<div class="post-copy">${esc(item.body)}</div>`:''}${item.media?.url?`<div class="media-box"><video controls preload="metadata" poster="${esc(item.media.thumbnailUrl||'')}"><source src="${esc(item.media.url)}" type="video/mp4"></video></div>`:''}<div class="post-actions"><button data-like="${item.id}" class="${item.likedByMe?'active':''}">♡ ${item.likes}</button><button data-comments="${item.id}">◌ ${item.comments}</button><button data-view="${item.id}">◉ ${item.views} vues</button>${item.author.id!==state.user.id?`<button data-follow="${item.author.id}">＋ Suivre</button>${IS_NATIVE?`<button data-tip="${item.author.id}">◇ Soutenir</button>`:`<button data-paid-subscribe="${item.author.id}">◆ Soutenir par abonnement</button>`}`:''}<button data-report="${item.id}">⚑ Signaler</button></div><div class="comments" data-comments-box="${item.id}" ${state.commentsOpen.has(item.id)?'':'hidden'}></div></article>`).join('');
+  return items.map(item => `<article class="card post" data-content-id="${item.id}"><div class="post-head"><div class="mono">${esc(mono(item.author.displayName))}</div><div><strong>${esc(item.author.displayName)}</strong><div class="muted small">@${esc(item.author.username)} · ${new Date(item.createdAt).toLocaleString('fr-FR')}</div></div></div>${item.title?`<h3>${esc(item.title)}</h3>`:''}${item.body?`<div class="post-copy">${esc(item.body)}</div>`:''}${item.media?.url?`<div class="media-box"><video controls preload="metadata" poster="${esc(item.media.thumbnailUrl||'')}"><source src="${esc(item.media.url)}" type="video/mp4"></video></div>`:''}<div class="post-actions"><button data-like="${item.id}" class="${item.likedByMe?'active':''}">♡ ${item.likes}</button><button data-comments="${item.id}">◌ ${item.comments}</button><button data-view="${item.id}">◉ ${item.views} vues</button>${PAYMENTS_ENABLED && item.author.id!==state.user.id?`<button data-follow="${item.author.id}">＋ Suivre</button>${IS_NATIVE?`<button data-tip="${item.author.id}">◇ Soutenir</button>`:`<button data-paid-subscribe="${item.author.id}">◆ Soutenir par abonnement</button>`}`:''}<button data-report="${item.id}">⚑ Signaler</button></div><div class="comments" data-comments-box="${item.id}" ${state.commentsOpen.has(item.id)?'':'hidden'}></div></article>`).join('');
 }
 
 function videosView() {
@@ -226,7 +227,7 @@ async function loadAnalytics() {
   state.billingReadiness = readiness; state.walletCredits = wallet.credits;
   const el = $('#analytics'); const actions = $('#creatorActions');
   if (!el) return;
-  if (actions) {
+  if (actions && PAYMENTS_ENABLED) {
     actions.innerHTML = IS_NATIVE
       ? `<button class="primary" data-buy-credits>＋ Acheter des crédits</button><button class="ghost" data-restore-purchases>Restaurer</button>`
       : `<button class="primary" data-connect-stripe>${readiness.payoutReady?'Versements activés':'Activer les versements'}</button>`;
@@ -296,7 +297,7 @@ async function boot() {
   }
   render();
   if (state.user) {
-    openEvents(); await window.YouFaceBilling?.configure?.(state.user.id).catch(() => {}); await loadFeed(true); await loadRoute();
+    openEvents(); if (PAYMENTS_ENABLED) await window.YouFaceBilling?.configure?.(state.user.id).catch(() => {}); await loadFeed(true); await loadRoute();
   }
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 }

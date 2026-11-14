@@ -98,6 +98,7 @@ export async function buildApp({ config, pool, storage, eventBus, identityVerifi
   app.get('/runtime-config.js', async (_request, reply) => {
     const publicConfig = {
       apiBaseUrl: '',
+      billingEnabled: config.billingEnabled,
       firebase: config.firebasePublic,
       iosGoogleAuthEnabled: config.iosGoogleAuthEnabled,
       revenueCatAppleApiKey: config.revenueCatAppleApiKey,

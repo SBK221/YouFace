@@ -1,3 +1,9 @@
+# Objectif actuel : gratuit pour tous, sans frais d’hébergement
+
+Le propriétaire a confirmé le Canada et un budget technique de zéro. La cible est désormais l’édition [Firebase Spark](../free/README.md). Le plan de déploiement Docker et de monétisation ci-dessous est historique et ne doit pas être utilisé pour publier cette édition.
+
+---
+
 # Mise en ligne de YouFace
 
 Le dépôt est public. L'application n'est pas encore déclarée déployée : il manque un serveur cible, un domaine et la configuration réelle des services. Le workflow Sites ne peut pas héberger directement cette architecture Fastify/PostgreSQL/Redis et son worker FFmpeg ; il faudrait la remplacer par une architecture Workers. Aucun projet YouFace n'a été retrouvé sur le compte Vercel connecté lors de la recherche.

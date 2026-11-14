@@ -1,3 +1,13 @@
+# YouFace — édition gratuite
+
+La cible web actuelle est **Firebase Spark, sans abonnement ni paiement**. Voir [le guide de publication gratuite](free/README.md). Les vidéos envoyées et SMS sont désactivés pour rester dans les limites sans facturation.
+
+Le site n’est pas encore déclaré publié : il manque l’identifiant/configuration Web Firebase et les coordonnées de l’exploitant (Canada confirmé). `npm run build:free:release` contrôle ces éléments avant publication.
+
+La section suivante documente l’ancienne architecture serveur, conservée pour référence et tests. Elle n’est pas déployée par `firebase.json`.
+
+---
+
 # YouFace
 
 **Plateforme sociale de contenu éducatif** — Flow, Expertise, Réseau et Profil.
