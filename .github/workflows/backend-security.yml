@@ -53,6 +53,4 @@ jobs:
           docker logs youface-minio
           exit 1
       - run: npm ci
-      - run: npm run security:check
-      - run: npm audit --audit-level=high
-      - run: npm test
+      - run: npm run verify

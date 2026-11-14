@@ -22,7 +22,7 @@ test('S3-compatible direct upload and FFmpeg worker', {skip:!enabled}, async t =
   const verifier={configured:true,async verify(){return{provider:'google',subject:`s3-${nonce}`,email:`s3-${nonce}@youface.test`,phoneE164:null,displayName:'S3 Creator'};}};
   const app=await buildApp({config,pool,storage,eventBus,identityVerifier:verifier,logger:false}); await app.ready();
   t.after(async()=>{await app.close();await eventBus.close();await pool.end();await fs.rm(root,{recursive:true,force:true});});
-  const auth=await exchange(app,'s3'); assert.equal(auth.response.statusCode,200,auth.response.body);
+  const auth=await exchange(app,'firebase-id-token-s3-user-0001'); assert.equal(auth.response.statusCode,200,auth.response.body);
   const sample=path.join(root,'direct.mp4'); await run('ffmpeg',['-y','-f','lavfi','-i','color=c=purple:s=360x640:d=2','-f','lavfi','-i','sine=frequency=880:duration=2','-c:v','libx264','-c:a','aac','-shortest',sample]); const video=await fs.readFile(sample);
   const init=await app.inject({method:'POST',url:'/api/media/uploads',headers:{cookie:auth.cookie,'content-type':'application/json','x-csrf-token':auth.body.csrfToken},payload:JSON.stringify({filename:'direct.mp4',mimeType:'video/mp4',sizeBytes:video.byteLength})}); assert.equal(init.statusCode,201,init.body); const upload=init.json(); assert.equal(upload.direct,true);
   const put=await fetch(upload.uploadUrl,{method:'PUT',headers:upload.headers,body:video}); assert.equal(put.ok,true,await put.text());
