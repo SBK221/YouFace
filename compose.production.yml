@@ -1,0 +1,75 @@
+name: youface
+x-app: &app
+  image: youface:local
+  build: .
+  env_file: .env.production
+  environment:
+    NODE_ENV: production
+    HOST: 0.0.0.0
+    PORT: 4173
+    COOKIE_SECURE: "true"
+    DATABASE_URL: postgres://youface:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/youface
+    REDIS_URL: redis://redis:6379
+  restart: unless-stopped
+  init: true
+  security_opt: ["no-new-privileges:true"]
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: youface
+      POSTGRES_USER: youface
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U youface -d youface"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  migrate:
+    <<: *app
+    restart: "no"
+    command: ["node", "server/migrate.js"]
+    depends_on:
+      postgres: {condition: service_healthy}
+  api:
+    <<: *app
+    command: ["sh", "-c", "node scripts/production-preflight.mjs && exec node server/index.js"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4173/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+  worker:
+    <<: *app
+    command: ["node", "worker/index.js"]
+    depends_on:
+      api: {condition: service_healthy}
+  proxy:
+    image: caddy:2-alpine
+    environment:
+      YOUFACE_DOMAIN: ${YOUFACE_DOMAIN:?Set YOUFACE_DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    ports: ["80:80", "443:443", "443:443/udp"]
+    depends_on:
+      api: {condition: service_healthy}
+    restart: unless-stopped
+volumes:
+  postgres-data:
+  caddy-data:
+  caddy-config:

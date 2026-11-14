@@ -1,0 +1,58 @@
+import test,{before,after,beforeEach} from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {initializeTestEnvironment,assertSucceeds,assertFails} from '@firebase/rules-unit-testing';
+import {doc,setDoc,getDoc,getDocs,collection,collectionGroup,query,where,limit,updateDoc,deleteDoc,serverTimestamp} from 'firebase/firestore';
+let env;
+const uid='member-a',other='member-b';
+const db=id=>env.authenticatedContext(id,{email_verified:true}).firestore();
+const profile=()=>({displayName:'Membre test',status:'active',termsVersion:'2026-11-14',acceptedAt:serverTimestamp()});
+const post=id=>({authorId:id,authorName:'Membre test',body:'Une idée publique',status:'published',createdAt:serverTimestamp()});
+before(async()=>{env=await initializeTestEnvironment({projectId:'demo-youface-free',firestore:{host:'127.0.0.1',port:18085,rules:await fs.readFile('free/firestore.rules','utf8')}});});
+after(async()=>{await env.cleanup();});
+beforeEach(async()=>{await env.clearFirestore();});
+test('only verified owners create private profiles and public posts',async()=>{
+ await assertFails(setDoc(doc(env.unauthenticatedContext().firestore(),'users',uid),profile()));
+ await assertFails(setDoc(doc(env.authenticatedContext(uid,{email_verified:false}).firestore(),'users',uid),profile()));
+ await assertSucceeds(setDoc(doc(db(uid),'users',uid),profile()));
+ await assertFails(getDoc(doc(db(other),'users',uid)));
+ await assertSucceeds(setDoc(doc(db(uid),'posts','first'),post(uid)));
+ await assertSucceeds(getDocs(query(collection(env.unauthenticatedContext().firestore(),'posts'),where('status','==','published'),limit(20))));
+ await assertFails(getDocs(collection(env.unauthenticatedContext().firestore(),'posts')));
+ await assertFails(setDoc(doc(db(other),'posts','forged'),post(uid)));
+});
+test('comments, reports and private blocks cannot be forged or read by another member',async()=>{
+ await setDoc(doc(db(uid),'users',uid),profile());await setDoc(doc(db(other),'users',other),profile());await setDoc(doc(db(uid),'posts','p'),post(uid));
+ const comment={authorId:other,authorName:'Autre',body:'Bonjour',createdAt:serverTimestamp()};
+ await assertFails(setDoc(doc(db(uid),'posts/p/comments/c'),comment));
+ await assertSucceeds(setDoc(doc(db(other),'posts/p/comments/c'),comment));
+ await assertFails(deleteDoc(doc(db('third'),'posts/p/comments/c')));
+ await assertSucceeds(setDoc(doc(db(other),'reports/r'),{reporterId:other,postId:'p',reason:'À examiner',createdAt:serverTimestamp()}));
+ await assertFails(getDoc(doc(db(uid),'reports/r')));
+ await assertSucceeds(setDoc(doc(db(uid),'users',uid,'blocks',other),{createdAt:serverTimestamp()}));
+ await assertFails(getDocs(collection(db(other),'users',uid,'blocks')));
+});
+test('deletion blocks new writes, hides posts, permits child cleanup and cannot reactivate a deleted identity',async()=>{
+ const a=db(uid),b=db(other);await setDoc(doc(a,'users',uid),profile());await setDoc(doc(b,'users',other),profile());await setDoc(doc(a,'posts/p'),post(uid));
+ await setDoc(doc(b,'posts/p/comments/c'),{authorId:other,authorName:'Autre',body:'Bonjour',createdAt:serverTimestamp()});await setDoc(doc(b,'posts/p/likes',other),{userId:other});
+ await assertSucceeds(updateDoc(doc(a,'users',uid),{status:'deleting'}));
+ await assertFails(setDoc(doc(a,'posts/new'),post(uid)));
+ await assertSucceeds(updateDoc(doc(a,'posts/p'),{status:'deleting'}));
+ await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'posts/p')));
+ await assertFails(setDoc(doc(b,'posts/p/comments/new'),{authorId:other,authorName:'Autre',body:'Tard',createdAt:serverTimestamp()}));
+ await assertSucceeds(getDocs(query(collection(a,'posts/p/comments'),limit(25))));
+ await assertSucceeds(deleteDoc(doc(a,'posts/p/comments/c')));await assertSucceeds(deleteDoc(doc(a,'posts/p/likes',other)));await assertSucceeds(deleteDoc(doc(a,'posts/p')));
+ await assertSucceeds(setDoc(doc(a,'users',uid),{status:'deleted',deletedAt:serverTimestamp()}));
+ const marker=(await getDoc(doc(a,'users',uid))).data();assert.deepEqual(Object.keys(marker).sort(),['deletedAt','status']);
+ await assertFails(setDoc(doc(a,'users',uid),profile()));await assertFails(deleteDoc(doc(a,'users',uid)));
+});
+test('collection group cleanup only returns the requesting member’s comments and likes',async()=>{
+ const a=db(uid),b=db(other);await setDoc(doc(a,'users',uid),profile());await setDoc(doc(b,'users',other),profile());await setDoc(doc(b,'posts/p'),post(other));
+ await setDoc(doc(a,'posts/p/comments/mine'),{authorId:uid,authorName:'Moi',body:'Mon commentaire',createdAt:serverTimestamp()});
+ await setDoc(doc(b,'posts/p/comments/theirs'),{authorId:other,authorName:'Autre',body:'Leur commentaire',createdAt:serverTimestamp()});
+ await setDoc(doc(a,'posts/p/likes',uid),{userId:uid});
+ const mine=await assertSucceeds(getDocs(query(collectionGroup(a,'comments'),where('authorId','==',uid),limit(25))));assert.equal(mine.size,1);
+ await assertFails(getDocs(query(collectionGroup(a,'comments'),limit(25))));
+ await assertSucceeds(deleteDoc(mine.docs[0].ref));
+ const likes=await assertSucceeds(getDocs(query(collectionGroup(a,'likes'),where('userId','==',uid),limit(25))));assert.equal(likes.size,1);await assertSucceeds(deleteDoc(likes.docs[0].ref));
+});

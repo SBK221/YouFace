@@ -1,0 +1,15 @@
+**/node_modules
+.git
+.env
+.env.*
+**/*firebase-adminsdk*.json
+**/firebase-service-account*.json
+**/google-services.json
+**/GoogleService-Info.plist
+secrets
+data
+android
+ios
+*.jks
+*.keystore
+work

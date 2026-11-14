@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signed() { return request.auth != null && request.auth.token.email_verified == true; }
+    function active() { return signed() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active'; }
+    function limited() { return request.query.limit != null && request.query.limit <= 25; }
+    function postOwner(postId) { return signed() && get(/databases/$(database)/documents/posts/$(postId)).data.authorId == request.auth.uid; }
+    function visible(postId) { return get(/databases/$(database)/documents/posts/$(postId)).data.status == 'published'; }
+    match /users/{uid} {
+      allow read: if signed() && request.auth.uid == uid;
+      allow create: if signed() && request.auth.uid == uid && request.resource.data.keys().hasOnly(['displayName','status','termsVersion','acceptedAt']) && request.resource.data.displayName is string && request.resource.data.displayName.size() >= 2 && request.resource.data.displayName.size() <= 80 && request.resource.data.status == 'active' && request.resource.data.termsVersion == '2026-11-14' && request.resource.data.acceptedAt == request.time;
+      allow update: if signed() && request.auth.uid == uid && (
+        (resource.data.status == 'active' && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName','status']) && request.resource.data.displayName is string && request.resource.data.displayName.size() >= 2 && request.resource.data.displayName.size() <= 80 && request.resource.data.status in ['active','deleting']) ||
+        (resource.data.status == 'deleting' && request.resource.data.keys().hasOnly(['status','deletedAt']) && request.resource.data.status == 'deleted' && request.resource.data.deletedAt == request.time)
+      );
+      allow delete: if false;
+
+      match /blocks/{blockedUid} {
+        allow read, delete: if signed() && request.auth.uid == uid;
+        allow create: if active() && request.auth.uid == uid && blockedUid != uid && request.resource.data.keys().hasOnly(['createdAt']) && request.resource.data.createdAt == request.time;
+        allow update: if false;
+      }
+    }
+    match /posts/{postId} {
+      allow get: if resource.data.status == 'published' || (signed() && resource.data.authorId == request.auth.uid);
+      allow list: if limited() && (resource.data.status == 'published' || (signed() && resource.data.authorId == request.auth.uid));
+      allow create: if active() && request.resource.data.keys().hasOnly(['authorId','authorName','body','status','createdAt']) && request.resource.data.authorId == request.auth.uid && request.resource.data.authorName is string && request.resource.data.authorName.size() <= 80 && request.resource.data.body is string && request.resource.data.body.size() > 0 && request.resource.data.body.size() <= 5000 && request.resource.data.status == 'published' && request.resource.data.createdAt == request.time;
+      allow update: if signed() && resource.data.authorId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) && request.resource.data.status == 'deleting';
+      allow delete: if signed() && resource.data.authorId == request.auth.uid;
+      match /comments/{commentId} {
+        allow get: if visible(postId) || postOwner(postId);
+        allow list: if limited() && (visible(postId) || postOwner(postId));
+        allow create: if active() && visible(postId) && request.resource.data.keys().hasOnly(['authorId','authorName','body','createdAt']) && request.resource.data.authorId == request.auth.uid && request.resource.data.authorName is string && request.resource.data.authorName.size() <= 80 && request.resource.data.body is string && request.resource.data.body.size() > 0 && request.resource.data.body.size() <= 1000 && request.resource.data.createdAt == request.time;
+        allow delete: if signed() && (resource.data.authorId == request.auth.uid || postOwner(postId));
+        allow update: if false;
+      }
+      match /likes/{uid} {
+        allow get: if signed() && (request.auth.uid == uid || postOwner(postId));
+        allow list: if limited() && postOwner(postId);
+        allow create: if active() && request.auth.uid == uid && visible(postId) && request.resource.data.keys().hasOnly(['userId']) && request.resource.data.userId == uid;
+        allow delete: if signed() && (request.auth.uid == uid || postOwner(postId));
+        allow update: if false;
+      }
+    }
+    match /{path=**}/comments/{commentId} {
+      allow list: if signed() && limited() && resource.data.authorId == request.auth.uid;
+      allow delete: if signed() && resource.data.authorId == request.auth.uid;
+    }
+    match /{path=**}/likes/{likeId} {
+      allow list: if signed() && limited() && resource.data.userId == request.auth.uid;
+      allow delete: if signed() && resource.data.userId == request.auth.uid;
+    }
+    match /reports/{reportId} {
+      allow create: if active() && request.resource.data.keys().hasOnly(['reporterId','postId','reason','createdAt']) && request.resource.data.reporterId == request.auth.uid && request.resource.data.postId is string && request.resource.data.reason is string && request.resource.data.reason.size() > 0 && request.resource.data.reason.size() <= 1000 && request.resource.data.createdAt == request.time;
+      allow get: if signed() && resource.data.reporterId == request.auth.uid;
+      allow list: if signed() && limited() && resource.data.reporterId == request.auth.uid;
+      allow delete: if signed() && resource.data.reporterId == request.auth.uid;
+      allow update: if false;
+    }
+  }
+}

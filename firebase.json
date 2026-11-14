@@ -1,0 +1,13 @@
+{
+  "hosting": {
+    "public": "free-dist",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "headers": [{"source":"**","headers":[
+      {"key":"X-Content-Type-Options","value":"nosniff"},
+      {"key":"Referrer-Policy","value":"strict-origin-when-cross-origin"},
+      {"key":"Content-Security-Policy","value":"default-src 'self'; script-src 'self' https://apis.google.com; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com; frame-src https://*.firebaseapp.com https://accounts.google.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"}
+    ]}]
+  },
+  "firestore": {"rules":"free/firestore.rules","indexes":"free/firestore.indexes.json"},
+  "emulators": {"firestore":{"port":18085},"ui":{"enabled":false},"singleProjectMode":true}
+}

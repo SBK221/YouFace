@@ -1,0 +1,76 @@
+name: Backend Security and PostgreSQL
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+
+concurrency:
+  group: backend-verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: youface_test
+          POSTGRES_USER: youface
+          POSTGRES_PASSWORD: youface_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U youface -d youface_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      TEST_DATABASE_URL: postgres://youface:youface_test_password@127.0.0.1:5432/youface_test
+      TEST_S3_ENDPOINT: http://127.0.0.1:9000
+      TEST_S3_REGION: us-east-1
+      TEST_S3_BUCKET: youface-media
+      TEST_S3_ACCESS_KEY: youface
+      TEST_S3_SECRET_KEY: youface_minio_password
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.2'
+          cache: false
+      - name: Build pinned MinIO test server
+        timeout-minutes: 15
+        run: |
+          git clone --depth 1 --branch RELEASE.2025-09-07T16-13-09Z \
+            https://github.com/minio/minio.git "$RUNNER_TEMP/minio-source"
+          test "$(git -C "$RUNNER_TEMP/minio-source" rev-parse HEAD)" = \
+            "07c3a429bfed433e49018cb0f78a52145d4bedeb"
+          cd "$RUNNER_TEMP/minio-source"
+          go build -trimpath -o "$RUNNER_TEMP/minio" .
+      - name: Start S3-compatible storage
+        run: |
+          MINIO_ROOT_USER=youface MINIO_ROOT_PASSWORD=youface_minio_password \
+            "$RUNNER_TEMP/minio" server "$RUNNER_TEMP/minio-data" \
+              --address 127.0.0.1:9000 --console-address 127.0.0.1:9001 \
+              > "$RUNNER_TEMP/minio.log" 2>&1 &
+          echo "$!" > "$RUNNER_TEMP/minio.pid"
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:9000/minio/health/live; then exit 0; fi
+            sleep 2
+          done
+          cat "$RUNNER_TEMP/minio.log"
+          exit 1
+      - run: npm ci
+      - run: npm run verify
+      - name: Stop S3-compatible storage
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/minio.pid" ]; then
+            kill "$(cat "$RUNNER_TEMP/minio.pid")" || true
+          fi
