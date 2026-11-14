@@ -62,4 +62,14 @@ Le nom et l'identifiant du projet ne suffisent pas à initialiser Firebase Authe
 
 Le 14 novembre 2026, les endpoints publics `/__/firebase/init.json` des domaines Firebase par défaut ont retourné HTTP 404 ; aucune configuration Web n'en a été récupérée et aucune publication n'a été confirmée.
 
-La configuration Web publique est aussi enregistrée dans `free/firebase-config.json`. L’appId confirmé est `1:778188824522:web:22a34043ff022aa1847933`. Les champs publics `apiKey` et `authDomain` restent à fournir depuis le même bloc Firebase ; aucune valeur privée n’est attendue. Les variables d’environnement conservent la priorité.
+La configuration Web publique est aussi enregistrée dans `free/firebase-config.json`. L’appId confirmé est `1:778188824522:web:22a34043ff022aa1847933`. Les champs publics `apiKey` et `authDomain` ont été fournis par le propriétaire et enregistrés. Aucun identifiant Analytics ni bucket Storage n’est utilisé dans cette édition. Aucune clé privée n’est requise. Les variables d’environnement conservent la priorité.
+
+## Contrôles du projet réel (14 novembre 2026)
+
+La configuration Web complète fournie par le propriétaire est enregistrée pour les quatre valeurs utilisées : API key publique, domaine d'authentification, projectId et appId. `measurementId`, Analytics, le bucket Storage et la messagerie push ne sont pas intégrés à l'édition gratuite.
+
+Le contrôle public Firebase Authentication répond et renvoie le numéro de projet `778188824522` ainsi que les domaines autorisés `youface-82f91.web.app` et `youface-82f91.firebaseapp.com`. Cela valide la cohérence de la configuration, pas un parcours de connexion réel ni l'activation de chaque fournisseur.
+
+Le contrôle Firestore renvoie HTTP 403, `SERVICE_DISABLED` : Cloud Firestore n'est pas activé sur le projet, ou une activation récente n'est pas encore propagée. Depuis la console Firebase du propriétaire, ouvrir Firestore Database et créer la base `(default)` en mode production (règles verrouillées). Choisir l'emplacement après examen des exigences de confidentialité ; rester sur Spark. Les règles et index de ce dépôt devront ensuite être déployés par une session propriétaire authentifiée. Ne pas mettre de règles ouvertes pour contourner ce blocage.
+
+Le build gratuit et le scan de sécurité réussissent. Le contrôle de release ne réclame plus de configuration Web : il attend encore le nom de l'exploitant et son e-mail public. Ces contrôles ne constituent pas une preuve de déploiement.
