@@ -61,3 +61,5 @@ Pour reproduire les tests Firebase : `npm ci --prefix tests/firebase`, puis `tes
 Le nom et l'identifiant du projet ne suffisent pas à initialiser Firebase Authentication. Dans Paramètres du projet → Général → Vos applications, sélectionner l'application Web (icône `</>`) et copier le bloc `firebaseConfig`. S'il n'y a aucune application Web, en enregistrer une pour YouFace. Les valeurs requises par ce site sont `apiKey`, `authDomain` et `appId` ; `projectId` est déjà renseigné. Ce sont des valeurs publiques de configuration Web, pas une clé privée de compte de service.
 
 Le 14 novembre 2026, les endpoints publics `/__/firebase/init.json` des domaines Firebase par défaut ont retourné HTTP 404 ; aucune configuration Web n'en a été récupérée et aucune publication n'a été confirmée.
+
+La configuration Web publique est aussi enregistrée dans `free/firebase-config.json`. L’appId confirmé est `1:778188824522:web:22a34043ff022aa1847933`. Les champs publics `apiKey` et `authDomain` restent à fournir depuis le même bloc Firebase ; aucune valeur privée n’est attendue. Les variables d’environnement conservent la priorité.
