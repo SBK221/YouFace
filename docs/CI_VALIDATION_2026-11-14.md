@@ -21,3 +21,11 @@
 ## Limites
 
 Ces tests utilisent des identités Firebase simulées et des événements de paiement de test. Ils ne valident ni les identifiants Firebase réels, ni les transactions réelles, ni les builds mobiles signés ou la production. Les succès locaux ne remplacent pas le résultat du workflow GitHub sur le nouveau commit.
+
+## Correction du démarrage MinIO dans GitHub Actions
+
+Le run `43538066862` a échoué avant `npm ci` : Docker Hub refuse le téléchargement de `minio/minio:latest`.
+
+Le workflow compile maintenant MinIO depuis la release officielle `RELEASE.2025-09-07T16-13-09Z`, en vérifiant le commit `07c3a429bfed433e49018cb0f78a52145d4bedeb`, avec Go 1.24.2. Le serveur écoute sur localhost et est arrêté après les tests, même en cas d'échec.
+
+Validation locale supplémentaire : compilation de cette source réussie ; `npm run verify` sous Node 22 avec PostgreSQL 17 et ce serveur MinIO réel réussit : 4 tests, 0 échec, 0 ignoré, audit sans vulnérabilité signalée. La première validation S3rver ci-dessus reste un résultat antérieur ; MinIO réel a désormais aussi été testé. Le résultat du nouveau run GitHub Actions reste à contrôler.
