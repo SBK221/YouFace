@@ -30,7 +30,9 @@
     "firebase:preflight": "node scripts/firebase-preflight.mjs",
     "firebase:fingerprints": "node scripts/android-fingerprints.mjs",
     "native:id:check": "node scripts/native-id-check.mjs",
-    "preflight:firebase": "npm run native:id:check && npm run firebase:preflight"
+    "preflight:firebase": "npm run native:id:check && npm run firebase:preflight",
+    "preflight:production": "node scripts/production-preflight.mjs",
+    "preflight:payments": "node scripts/production-preflight.mjs --payments"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1079.0",

@@ -25,17 +25,37 @@ export async function billingRoutes(app, ctx) {
     const storeKey = request.headers['x-youface-platform'] === 'ios' ? config.revenueCatAppleApiKey : config.revenueCatGoogleApiKey;
     const reasons = [];
     if (!native && !stripe) reasons.push('STRIPE_SECRET_KEY_MISSING');
+    if (!native && !config.stripeWebhookSecret) reasons.push('STRIPE_WEBHOOK_SECRET_MISSING');
+    if (!native && !config.stripeCreatorPriceId) reasons.push('STRIPE_CREATOR_PRICE_ID_MISSING');
     if (native && !storeKey) reasons.push('REVENUECAT_PUBLIC_KEY_MISSING');
-    if (!config.revenueCatWebhookAuthorization || !config.revenueCatWebhookHmacSecret) reasons.push('REVENUECAT_WEBHOOK_SECURITY_NOT_CONFIGURED');
+    if (native && (!config.revenueCatWebhookAuthorization || !config.revenueCatWebhookHmacSecret)) reasons.push('REVENUECAT_WEBHOOK_SECURITY_NOT_CONFIGURED');
+    let payoutReady = false;
+    if (!native && stripe && request.auth.stripe_account_id) {
+      const account = await stripe.accounts.retrieve(request.auth.stripe_account_id);
+      payoutReady = Boolean(account.payouts_enabled && account.capabilities?.transfers === 'active');
+    }
     return {
       platform: native ? 'native' : 'web',
+      platformFeePercent: config.stripeApplicationFeePercent,
       webStripeConfigured: Boolean(stripe),
       connectConfigured: Boolean(stripe),
       revenueCatConfigured: Boolean(storeKey),
       storeBillingConfigured: Boolean(storeKey && config.revenueCatWebhookAuthorization && config.revenueCatWebhookHmacSecret),
-      payoutReady: Boolean(stripe && request.auth.stripe_account_id),
+      payoutReady,
       blockingReasons: reasons
     };
+  });
+
+  app.post('/api/billing/portal', {
+    preHandler: [auth.requireAuth, auth.requireCsrf, requireStripe]
+  }, async (request, reply) => {
+    if (isNativeClient(request)) return reply.code(409).send({ error: 'NATIVE_STORE_BILLING_REQUIRED' });
+    if (!request.auth.stripe_customer_id) return reply.code(409).send({ error: 'NO_BILLING_CUSTOMER' });
+    const session = await stripe.billingPortal.sessions.create({
+      customer: request.auth.stripe_customer_id,
+      return_url: config.billingCancelUrl
+    });
+    return { url: session.url };
   });
 
   app.get('/api/billing/wallet', { preHandler: auth.requireAuth }, async request => {
@@ -107,9 +127,12 @@ export async function billingRoutes(app, ctx) {
   }, async (request, reply) => {
     if (isNativeClient(request)) return reply.code(409).send({ error: 'NATIVE_STORE_BILLING_REQUIRED' });
     if (!config.stripeCreatorPriceId) return reply.code(503).send({ error: 'CREATOR_PRICE_NOT_CONFIGURED' });
+    if (!config.stripeWebhookSecret) return reply.code(503).send({ error: 'BILLING_WEBHOOK_NOT_CONFIGURED' });
     if (request.params.creatorId === request.auth.id) return reply.code(400).send({ error: 'CANNOT_SUBSCRIBE_SELF' });
     const creator = await pool.query("SELECT id,stripe_account_id FROM users WHERE id=$1 AND status='active'", [request.params.creatorId]);
     if (!creator.rowCount || !creator.rows[0].stripe_account_id) return reply.code(409).send({ error: 'CREATOR_NOT_PAYMENT_READY' });
+    const account = await stripe.accounts.retrieve(creator.rows[0].stripe_account_id);
+    if (!account.payouts_enabled || account.capabilities?.transfers !== 'active') return reply.code(409).send({ error: 'CREATOR_NOT_PAYMENT_READY' });
     let customerId = request.auth.stripe_customer_id;
     if (!customerId) {
       const customer = await stripe.customers.create({ ...(request.auth.email ? { email: request.auth.email } : {}), metadata: { youface_user_id: request.auth.id } });
