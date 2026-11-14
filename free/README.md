@@ -25,13 +25,13 @@ Sources vérifiées le 14 novembre 2026 :
 
 ## Configuration réelle manquante
 
-1. Fournir l'identifiant du projet Firebase et confirmer le plan Spark sans facturation.
+1. Le projet confirmé par le propriétaire est `youface-82f91` (numéro `778188824522`), configuré dans `.firebaserc`. Le propriétaire indique Spark ; la facturation réelle reste à contrôler depuis une session authentifiée avant publication.
 2. Activer Authentication : e-mail/mot de passe et Google seulement. Ajouter le domaine Hosting aux domaines autorisés.
 3. Créer Firestore en mode verrouillé, puis déployer les règles de ce dépôt. Choisir l'emplacement de la base en connaissance des obligations de confidentialité ; aucune résidence canadienne globale n'est promise.
 4. Copier la configuration **publique de l'application Web** de Firebase dans un `.env` local ignoré : `FIREBASE_PROJECT_ID`, `FIREBASE_PUBLIC_API_KEY`, `FIREBASE_PUBLIC_AUTH_DOMAIN`, `FIREBASE_PUBLIC_APP_ID`. Ne jamais y mettre une clé Admin pour ce site : il n'en utilise aucune.
 5. Compléter `free/legal.json` : nom réel de l'exploitant et e-mail public. Le pays Canada a été confirmé. Le texte de conditions/confidentialité est une proposition à adapter à l'exploitation réelle, pas une certification juridique.
 6. `npm ci`, puis `npm run build:free:release`. Cette commande refuse la publication si les coordonnées ou la configuration Web manquent.
-7. Depuis une session Firebase CLI authentifiée du propriétaire : `firebase deploy --only hosting,firestore --project IDENTIFIANT_REEL`. Les fichiers `firebase.json` n'incluent ni fonction ni stockage payant. Utiliser Hosting classique, pas App Hosting.
+7. Depuis une session Firebase CLI authentifiée du propriétaire : `firebase deploy --only hosting,firestore --project youface-82f91`. Les fichiers `firebase.json` n'incluent ni fonction ni stockage payant. Utiliser Hosting classique, pas App Hosting.
 
 L'URL réelle renvoyée par Firebase doit être contrôlée après déploiement. Aucune URL n'est inventée ici et aucun succès de publication n'est annoncé avant ce résultat.
 
@@ -55,3 +55,9 @@ Conserver et superviser les quotas, traiter les signalements et demandes de conf
 - Ces tests ne constituent pas une connexion au vrai projet Firebase et ne prouvent pas un déploiement public. Aucun fournisseur de facturation n'a été activé.
 
 Pour reproduire les tests Firebase : `npm ci --prefix tests/firebase`, puis `tests/firebase/node_modules/.bin/firebase emulators:exec --only firestore --project demo-youface-free 'node --test tests/firebase/rules.test.mjs'`. Java 21 est requis ; le workflow Firebase gratuit exécute ces tests sur chaque PR.
+
+## Configuration de l'application Web encore nécessaire
+
+Le nom et l'identifiant du projet ne suffisent pas à initialiser Firebase Authentication. Dans Paramètres du projet → Général → Vos applications, sélectionner l'application Web (icône `</>`) et copier le bloc `firebaseConfig`. S'il n'y a aucune application Web, en enregistrer une pour YouFace. Les valeurs requises par ce site sont `apiKey`, `authDomain` et `appId` ; `projectId` est déjà renseigné. Ce sont des valeurs publiques de configuration Web, pas une clé privée de compte de service.
+
+Le 14 novembre 2026, les endpoints publics `/__/firebase/init.json` des domaines Firebase par défaut ont retourné HTTP 404 ; aucune configuration Web n'en a été récupérée et aucune publication n'a été confirmée.
